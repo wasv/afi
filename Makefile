@@ -5,7 +5,7 @@ OBJS=src/main.o src/lib.o src/startup.o hw/$(TARGET)/hal.o
 .PHONY: all run debug clean-all
 all: out/$(TARGET)-main.elf
 
-%.o: %.s
+%.o: %.s src/macros.i
 	arm-none-eabi-as -g $< -o $@
 %.o: %.c
 	arm-none-eabi-gcc -c -g $< -c -o $@

@@ -15,14 +15,14 @@ gets:
         MOVS  R4,#0x0D
         CMP   R0, R4
         BEQ   2f		  @ If newline, return  
-        MOVS  R4,#0x40
+        MOVS  R4,#0x20
         CMP   R0, R4
         BLT   1b	      @ Check lower ASCII bound
         MOVS  R4,#0x7F
         CMP   R0, R4
         BHS   1b	      @ Check upper ASCII bound
         CMP   R1, R2      @ Check if index past buffer
-        BLS   1b	      @ If so, dont echo or store.
+        BLS   1b	      @ If so, dont echo or store
         BL    putc
         STRB  R0,[R3,R2]  @ Store byte.
         ADDS  R2, R2,#1
@@ -59,3 +59,4 @@ puts:
 2:      @ End of puts loop
         POP  {R0-R2}
         POP  {PC}
+
