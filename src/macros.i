@@ -16,7 +16,10 @@
 
 .set F_IMMED,0x80
 .set F_HIDDEN,0x20
-.set F_LENMASK,0x1f     // length mask
+.set F_LENGTH,0x1f
+
+.equ OFF_FLAG,  4
+.equ OFF_NAME,  5
 
 // Store the chain of links.
 .set link,0

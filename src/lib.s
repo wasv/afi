@@ -1,10 +1,8 @@
 .include            "src/macros.i"
 
-.text
-
     defvar "STATE",5,,STATE
     defvar "HERE",4,,HERE
-    defvar "LATEST",6,,LATEST,name_WORD // SYSCALL0 must be last in built-in dictionary
+    defvar "LATEST",6,,LATEST,name_WORD
     defvar "S0",2,,SZ
     defvar "BASE",4,,BASE,10
 
@@ -16,6 +14,60 @@ DOCOL:
     ADD     R0, R0, #0x04
     MOV     R0, R7
 	NEXT
+
+    defcode "FIND",4,,FIND
+/* Matches a string to the corresponding dictionary entry.
+ * Requires:
+ *  (1) R5 - length of string.
+ *  (2) R4 - Addresss of string.
+ * Returns:
+    (1) R0 - Address of dictionary entry.
+ */
+    POP    {R5}                 @ length of string
+    POP    {R4}                 @ address of string
+    BL      _FIND
+    PUSH   {R0}                 @ Address of dictionary entry
+    NEXT
+
+.global _FIND
+_FIND:
+    PUSH   {LR}
+    PUSH   {R6}                 @ Need an extra register.
+    LDR     R0,=var_LATEST
+    LDR     R0,[R0]             @ Load head of dictionary linked list.
+
+1:  TST     R0,R0               @ Check if 0 (end of Linked List)
+    BEQ     4f
+
+    LDRB    R1,[R0,#OFF_FLAG]   @ R1 holds flag byte for entry
+    MOV     R2,#(F_HIDDEN|F_LENGTH)
+    AND     R1,R1,R2
+    CMP     R1,R5
+    BNE     3f
+
+    SUB     R3,R5,#1
+    ADD     R6,R0,#OFF_NAME
+
+2:
+    LDRB    R1,[R6,R3]          @ Load character of entry name.
+    LDRB    R2,[R4,R3]          @ Load character of search name.
+    CMP     R1,R2               @ If mismatch, try next entry.
+    BNE     3f
+
+    SUBS    R3,R3,#1            @ Decrement character count
+    BEQ     5f                  @ If no characters left, it's a match!
+    B       2b                  @ If not done, keep checking.
+
+3:
+    LDR     R0,[R0]             @ Advance to next entry
+    B       1b
+
+4:  @ Not found.
+    MOV     R0,#0
+
+5:  @ Return
+    POP    {R6}
+    POP    {PC}
 
     defcode "NUMBER",6,,NUMBER
 /* Reads a base 10 number from stdin.

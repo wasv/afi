@@ -8,9 +8,10 @@ main:
 repl:
 /* repl - tokenizes and executes the string in r0. */
     BL      _WORD
-    BL      _NUMBER
-    TST     R5,R5
+    BL      _FIND
+    TST     R0,R0
     BNE     repl
+    MOV     R0,#'!'
     BL      _EMIT
     B       repl
 
