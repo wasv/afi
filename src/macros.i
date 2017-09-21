@@ -55,3 +55,21 @@ name_\label :
     .globl code_\label
 code_\label :                   // assembler code follows
 .endm
+
+.macro defvar name, namelen, flags=0, label, initial=0
+    defcode \name,\namelen,\flags,\label
+    LDR   R0, =var_\name
+    PUSH {R0}
+    NEXT
+    .data
+    .align 4
+var_\name :
+   .int \initial
+.endm
+
+.macro defconst name, namelen, flags=0, label, value
+    defcode \name,\namelen,\flags,\label
+    LDR   R0, #\value
+    PUSH {R0}
+    NEXT
+.endm
