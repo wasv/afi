@@ -1,19 +1,101 @@
 .include            "src/macros.i"
 
-    defvar "STATE",5,,STATE
-    defvar "HERE",4,,HERE
     defvar "LATEST",6,,LATEST,name_WORD
+    .global var_S0
     defvar "S0",2,,SZ
-    defvar "BASE",4,,BASE,10
+    defconst "R0",2,,RZ,return_stack_top
 
 .text
+
+    defcode "INTERPRET",9,,INTERPRET
+    BL      _WORD
+    BL      _FIND
+    TST     R0,R0
+    BEQ     1f
+    MOV     R0,#'!'
+    BL      _EMIT
+    MOV     R0,#0x0A
+    BL      _EMIT
+    MOV     R0,#0x0D
+    BL      _EMIT
+1:  NEXT
+
+    .global QUIT
+    defword "QUIT",4,,QUIT
+    .int RZ,RSPSTORE        @ clear the return stack
+    .int INTERPRET          @ interpret the next word
+    .int BRANCH,-8          @ and loop (indefinitely)
+
+    defcode "RSP!",4,,RSPSTORE
+    POP    {R6}
+    NEXT
+
+    defcode "4+",2,,INCR4
+    /* Increment the top of the stack by 4. */
+    POP    {R0}
+    ADD     R0,R0,#4
+    PUSH   {R0}
+    NEXT
+
+    defcode "BRANCH",6,,BRANCH
+    /* Jump a certain offset away from current codeword pointer */
+    LDR     R0, [R7]
+    ADD     R7, R7, R0
+    NEXT
+
+    defcode "0BRANCH",7,,ZBRANCH
+    /* Branch only if top of stack is zero. */
+    POP    {R0}
+    TST     R0, R0
+    BEQ     code_BRANCH
+    ADD     R7, R7, #4
+    NEXT
+
 /* Starts the execution of a Forth word. */
 .global DOCOL
 DOCOL:
     PUSHRSP R7
     ADD     R0, R0, #0x04
-    MOV     R0, R7
-	NEXT
+    MOV     R7, R0
+    NEXT
+
+    defword ">DFA",4,,TDFA
+    /* Convert a codeword pointer to a pointer to the first data field.
+     * Requires:
+     *  (1) - Pointer to a dictionary entry.
+     * Returns:
+     *  (1) - Pointer to the corresponding codeword.
+     */
+    .int TCFA               @ >CFA         (get code field address)
+    .int INCR4              @ 4+           (add 4 to it to get to next word)
+    .int EXIT               @ EXIT         (return from FORTH word)
+
+    defcode ">CFA",4,,TCFA
+    /* Convert a dictionary entry pointer to codeword pointer.
+     * Requires:
+     *  R5 - Pointer to a dictionary entry.
+     * Returns:
+     *  R5 - Pointer to the corresponding codeword.
+     */
+    POP    {R5}
+    BL      _TCFA
+    PUSH   {R5}
+    NEXT
+
+_TCFA:
+    PUSH   {LR}
+    MOV     R0,#0
+    ADD     R5,R5,#4
+    LDRB    R0,[R5]
+    ADD     R5,R5,#1
+    MOV     R2,#(F_HIDDEN|F_LENGTH)
+    AND     R1,R1,R2
+    ADD     R5,R5,R2
+
+    ADD     R5,R5,#3
+    MOV     R2,#3
+    AND     R1,R1,R2
+    POP    {PC}
 
     defcode "FIND",4,,FIND
 /* Matches a string to the corresponding dictionary entry.
@@ -250,7 +332,8 @@ _WORD:
     BL      _EMIT
 
 5:  @ Return
-    POP {PC}
+    POP     {PC}
+
 
 .bss
 .align 5

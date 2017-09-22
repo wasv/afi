@@ -1,3 +1,4 @@
+.include            "src/macros.i"
 @ --- equates
 .equ RETURN_STACK_SIZE, 1024
 
@@ -5,17 +6,17 @@
 .global main
 main:
     LDR   R6, =return_stack_top   @ intialize the return stack.
-repl:
-/* repl - tokenizes and executes the string in r0. */
-    BL      _WORD
-    BL      _FIND
-    TST     R0,R0
-    BNE     repl
-    MOV     R0,#'!'
-    BL      _EMIT
-    B       repl
+    LDR   R0, =var_S0
+    STR   SP, [R0]
+    LDR   R7, =cold_start
+    NEXT
+
+    .section .rodata
+cold_start:
+    .int QUIT
 
 .bss
 .align 10
 return_stack:   .space  RETURN_STACK_SIZE
+.global return_stack_top
 return_stack_top:

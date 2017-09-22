@@ -1,7 +1,8 @@
 @ -*- mode:asm -*-
 .macro NEXT
 	LDR R0,[R7],#4
-	BX  R0
+    LDR R1,[R0]
+	BX  R1
 .endm
 
 .macro PUSHRSP reg
@@ -72,7 +73,7 @@ var_\name :
 
 .macro defconst name, namelen, flags=0, label, value
     defcode \name,\namelen,\flags,\label
-    LDR   R0, #\value
+    LDR   R0, =\value
     PUSH {R0}
     NEXT
 .endm
