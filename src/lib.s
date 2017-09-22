@@ -8,17 +8,22 @@
 .text
 
     defcode "INTERPRET",9,,INTERPRET
-    BL      _WORD
-    BL      _FIND
-    TST     R0,R0
-    BEQ     1f
+    BL      _WORD       @ Read word.
+    BL      _FIND       @ Find in dictionary
+    TST     R0,R0       @ Check if found
+    BEQ     1f          @ Skip to end if not found.
+
+    MOV     R5,R0
+    BL      _TCFA       @ Translate to codeword
+    MOV     R0,R5
+    ADD     R0,R0,#4
+    LDR     R0,[R0]
+    BX      R0          @ Execute.
+
+1:
     MOV     R0,#'!'
     BL      _EMIT
-    MOV     R0,#0x0A
-    BL      _EMIT
-    MOV     R0,#0x0D
-    BL      _EMIT
-1:  NEXT
+    NEXT
 
     .global QUIT
     defword "QUIT",4,,QUIT
@@ -89,12 +94,12 @@ _TCFA:
     LDRB    R0,[R5]
     ADD     R5,R5,#1
     MOV     R2,#(F_HIDDEN|F_LENGTH)
-    AND     R1,R1,R2
+    AND     R2,R0,R2
     ADD     R5,R5,R2
 
     ADD     R5,R5,#3
-    MOV     R2,#3
-    AND     R1,R1,R2
+    MVN     R2,#3
+    AND     R5,R5,R2
     POP    {PC}
 
     defcode "FIND",4,,FIND
