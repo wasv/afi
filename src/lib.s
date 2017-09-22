@@ -7,49 +7,88 @@
 
 .text
 
+/* Read, lookup, and execute each word. */
     defcode "INTERPRET",9,,INTERPRET
+    @ Read and lookup codeword.
     BL      _WORD       @ Read word.
     BL      _FIND       @ Find in dictionary
     TST     R0,R0       @ Check if found
-    BEQ     1f          @ Skip to end if not found.
+    BEQ     1f          @ If not found, check if literal.
 
-    MOV     R5,R0
+    @ Translate and execute codeword.
     BL      _TCFA       @ Translate to codeword
-    MOV     R0,R5
-    ADD     R0,R0,#4
+    ADD     R0,R0,#8
     LDR     R0,[R0]
     BX      R0          @ Execute.
 
-1:
+1:  @ Literal?
+    BL      _NUMBER     @ Translate word to number.
+    TST     R5,R5       @ Test if valid number was found.
+    BNE     2f          @ Error if not.
+
+    @ Execute literal
+    PUSH   {R0}
+@    LDR     R0,=LIT
+@    LDR     R0,[R0]
+@    BX      R0          @ Execute.
+    NEXT
+
+2:  @ Error: Invalid word.
     MOV     R0,#'!'
     BL      _EMIT
     NEXT
 
+/* Used to quit to interpreter within a Forth word. */
     .global QUIT
     defword "QUIT",4,,QUIT
     .int RZ,RSPSTORE        @ clear the return stack
     .int INTERPRET          @ interpret the next word
     .int BRANCH,-8          @ and loop (indefinitely)
 
+/* Replace the return stack pointer with the top value of the stack */
     defcode "RSP!",4,,RSPSTORE
     POP    {R6}
     NEXT
 
+/* Increment the top of the stack by 4. */
     defcode "4+",2,,INCR4
-    /* Increment the top of the stack by 4. */
     POP    {R0}
     ADD     R0,R0,#4
     PUSH   {R0}
     NEXT
 
+/* Add 1st value on stack to 2nd. Then push the result. */
+    defcode "+",1,,ADD
+    POP {R0}
+    POP {R1}
+    ADD R1,R0,R1
+    PUSH {R1}
+    NEXT
+
+/* Subtract 1st value on stack to 2nd. Then push the result. */
+    defcode "-",1,,SUB
+    POP {R0}
+    POP {R1}
+    SUB R1,R0,R1
+    PUSH {R1}
+    NEXT
+
+/* Subtract 1st value on stack to 2nd. Then push the result. */
+    defcode "*",1,,MUL
+    POP {R0}
+    POP {R1}
+    MUL R1,R0,R1
+    PUSH {R1}
+    NEXT
+
+/* Jump a certain offset away from current codeword pointer */
     defcode "BRANCH",6,,BRANCH
-    /* Jump a certain offset away from current codeword pointer */
     LDR     R0, [R7]
     ADD     R7, R7, R0
     NEXT
 
+/* Branch only if top of stack is zero. */
     defcode "0BRANCH",7,,ZBRANCH
-    /* Branch only if top of stack is zero. */
     POP    {R0}
     TST     R0, R0
     BEQ     code_BRANCH
@@ -64,45 +103,44 @@ DOCOL:
     MOV     R7, R0
     NEXT
 
+/* Convert a codeword pointer to a pointer to the first data field.
+ * Requires:
+ *  (1) - Pointer to a dictionary entry.
+ * Returns:
+ *  (1) - Pointer to the corresponding codeword.
+ */
     defword ">DFA",4,,TDFA
-    /* Convert a codeword pointer to a pointer to the first data field.
-     * Requires:
-     *  (1) - Pointer to a dictionary entry.
-     * Returns:
-     *  (1) - Pointer to the corresponding codeword.
-     */
     .int TCFA               @ >CFA         (get code field address)
     .int INCR4              @ 4+           (add 4 to it to get to next word)
     .int EXIT               @ EXIT         (return from FORTH word)
 
+/* Convert a dictionary entry pointer to codeword pointer.
+ * Requires:
+ *  R0 - Pointer to a dictionary entry.
+ * Returns:
+ *  R0 - Pointer to the corresponding codeword.
+ */
     defcode ">CFA",4,,TCFA
-    /* Convert a dictionary entry pointer to codeword pointer.
-     * Requires:
-     *  R5 - Pointer to a dictionary entry.
-     * Returns:
-     *  R5 - Pointer to the corresponding codeword.
-     */
-    POP    {R5}
+    POP    {R0}
     BL      _TCFA
-    PUSH   {R5}
+    PUSH   {R0}
     NEXT
 
 _TCFA:
     PUSH   {LR}
-    MOV     R0,#0
-    ADD     R5,R5,#4
-    LDRB    R0,[R5]
-    ADD     R5,R5,#1
+    MOV     R1,#0
+    ADD     R0,R0,#4
+    LDRB    R1,[R5]
+    ADD     R0,R0,#1
     MOV     R2,#(F_HIDDEN|F_LENGTH)
-    AND     R2,R0,R2
-    ADD     R5,R5,R2
+    AND     R2,R1,R2
+    ADD     R0,R0,R2
 
-    ADD     R5,R5,#3
+    ADD     R0,R0,#3
     MVN     R2,#3
-    AND     R5,R5,R2
+    AND     R0,R0,R2
     POP    {PC}
 
-    defcode "FIND",4,,FIND
 /* Matches a string to the corresponding dictionary entry.
  * Requires:
  *  (1) R5 - length of string.
@@ -110,6 +148,7 @@ _TCFA:
  * Returns:
     (1) R0 - Address of dictionary entry.
  */
+    defcode "FIND",4,,FIND
     POP    {R5}                 @ length of string
     POP    {R4}                 @ address of string
     BL      _FIND
@@ -142,7 +181,7 @@ _FIND:
     BNE     3f
 
     SUBS    R3,R3,#1            @ Decrement character count
-    BEQ     5f                  @ If no characters left, it's a match!
+    BLT     5f                  @ If no characters left, it's a match!
     B       2b                  @ If not done, keep checking.
 
 3:
@@ -156,7 +195,6 @@ _FIND:
     POP    {R6}
     POP    {PC}
 
-    defcode "NUMBER",6,,NUMBER
 /* Reads a base 10 number from stdin.
  * Requires:
  *  (1) R5 - Length of string to read.
@@ -165,6 +203,7 @@ _FIND:
  *  (2) R0 - Number read.
  *  (1) R5 - Number of unparsed characters.
  */
+    defcode "NUMBER",6,,NUMBER
     POP    {R5}                 @ length of string
     POP    {R4}                 @ start address of string
     BL      _NUMBER
@@ -181,7 +220,7 @@ _NUMBER:
 
     MOV     R0,#0               @ Push zero onto stack
     PUSH   {R0}
-    
+
     @ Check for negative.
     LDRB    R1,[R4],#1
     CMP     R1,#'-'             @ Is number negative?
@@ -212,7 +251,7 @@ _NUMBER:
     ADD     R0,R0,R1
     SUBS    R5,R5,#1
     BNE     1b
-        
+
 3:  @ Negate and exit.
     POP    {R1}                 @ Check if top of stack is zero.
     TST     R1,R1
@@ -221,13 +260,13 @@ _NUMBER:
     NEG     R0,R0               @ Negate
 
 4:  POP    {PC}                 @ Return
-    
-        
- 
-    defcode "EXIT",4,,EXIT
+
+
+
 /* Exits from a Forth word
  *
  */
+    defcode "EXIT",4,,EXIT
     POPRSP  R7              @ pop return stack into R7
     NEXT
 
@@ -240,7 +279,7 @@ _NUMBER:
     LDR      R0,[R7],#4
     PUSH    {R0}            @ push the literal number on to stack
     NEXT
-    
+
 /*  Reads a character from stdin.
  *  Returns:
  *  (1) R0 - character read.
@@ -251,24 +290,24 @@ _NUMBER:
     NEXT
 
 .global _KEY
-_KEY:   
+_KEY:
     PUSH   {LR}
     PUSH   {R1}
     BL      getc      @ Read character
 
     MOVS    R1,#0x20
     CMP     R0, R1
-    BLT     1f	      @ Check lower ASCII bound
+    BLT     1f        @ Check lower ASCII bound
     MOVS    R1,#0x7F
     CMP     R0, R1
-    BHS     1f	      @ Check upper ASCII bound
+    BHS     1f        @ Check upper ASCII bound
 
     BL      putc      @ Echo character
 1:
     POP    {R1}
     POP    {PC}
 
-/*  Prints a character to stdin.
+/*  Prints a character to stdout.
  *  Requires:
  *  (1) R0 - character to print.
  */
@@ -284,6 +323,7 @@ _EMIT:
     POP    {PC}
 
 /*  Reads a word from stdin.
+ *   Uses a static 32 byte buffer to store each word.
  *  Returns:
  *  (2) R4 - address of word read.
  *  (1) R5 - length of word read.
@@ -358,18 +398,18 @@ gets:
         MOVS  R2,#0       @ Init loop counter
         MOVS  R3, R0      @ R3 points to start of string buffer
 1:		@ Start of gets loop
-		BL    getc     	  @ Read char into R0
+        BL    getc        @ Read char into R0
         MOVS  R4,#0x0D
         CMP   R0, R4
-        BEQ   2f		  @ If newline, return  
+        BEQ   2f          @ If newline, return
         MOVS  R4,#0x20
         CMP   R0, R4
-        BLT   1b	      @ Check lower ASCII bound
+        BLT   1b          @ Check lower ASCII bound
         MOVS  R4,#0x7F
         CMP   R0, R4
-        BHS   1b	      @ Check upper ASCII bound
+        BHS   1b          @ Check upper ASCII bound
         CMP   R1, R2      @ Check if index past buffer
-        BLS   1b	      @ If so, dont echo or store
+        BLS   1b          @ If so, dont echo or store
         BL    putc
         STRB  R0,[R3,R2]  @ Store byte.
         ADDS  R2, R2,#1
@@ -396,14 +436,13 @@ puts:
         ADDS  R1, R1, R0  @ R1 Points to end of buffer
         MOVS  R2, R0      @ R2 Points to start of string
 1:		@ Start of puts loop
-		LDRB  R0,[R2, #0] @ Load char from string
+        LDRB  R0,[R2, #0] @ Load char from string
         TST   R0, R0
         BEQ   2f          @ Break if char == 0
-        BL    putc		  @ Else, print char
+        BL    putc        @ Else, print char
         ADDS  R2, R2, #1  @ Increment counter
         CMP   R1, R2      @ If at end of buffer, exit
         BHS   1b
 2:      @ End of puts loop
         POP  {R0-R2}
         POP  {PC}
-
