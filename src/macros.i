@@ -22,7 +22,7 @@
 .equ OFF_FLAG,  4
 .equ OFF_NAME,  5
 
-// Store the chain of links.
+//Store the chain of links.
 .set link,0
 
 .macro defword name, namelen, flags=0, label

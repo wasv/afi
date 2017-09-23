@@ -5,7 +5,7 @@
 .text
 .global main
 main:
-    LDR   R6, =return_stack_top   @ intialize the return stack.
+    LDR   R6, =return_stack_top //initialize return stack.
     LDR   R0, =var_S0
     STR   SP, [R0]
     LDR   R7, =cold_start
