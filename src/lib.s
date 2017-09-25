@@ -60,10 +60,46 @@
     POP    {R0}
     NEXT
 
-/* Drop top of the stack. */
+/* Swap top two elements fo the stack. */
+    defcode "SWAP",4,,SWAP
+    POP    {R0}
+    POP    {R1}
+    PUSH   {R0}
+    PUSH   {R1}
+    NEXT
+
+/* Duplicate top of the stack. */
     defcode "DUP",3,,DUP
     LDR     R0,[SP]
     PUSH   {R0}
+    NEXT
+
+/* Copy second item of stack onto top of stack. */
+    defcode "OVER",4,,OVER
+    LDR     R0,[SP,#4]
+    PUSH   {R0}
+    NEXT
+
+/* Rotate the top three values on the stack. */
+    defcode "ROT",3,,ROT
+    POP    {R0}
+    POP    {R1}
+    POP    {R2}
+
+    PUSH   {R1}
+    PUSH   {R0}
+    PUSH   {R2}
+    NEXT
+
+/* Rotate the top three values on the stack. */
+    defcode "-ROT",4,,NROT
+    POP    {R0}
+    POP    {R1}
+    POP    {R2}
+
+    PUSH   {R0}
+    PUSH   {R2}
+    PUSH   {R1}
     NEXT
 
 /* Add 1st value on stack to 2nd. Then push the result. */
