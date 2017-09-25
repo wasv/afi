@@ -202,8 +202,7 @@ _TCFA:
 
 .global _FIND
 _FIND:
-    PUSH   {LR}
-    PUSH   {R6}                 // Need an extra register.
+    PUSH   {R6,LR}
     LDR     R0,=var_LATEST
     LDR     R0,[R0]             // Load head of dictionary linked list.
 
@@ -237,8 +236,7 @@ _FIND:
     MOV     R0,#0
 
 5:  // Return
-    POP    {R6}
-    POP    {PC}
+    POP    {R6,PC}
 
 /* Prints the top of the stack with a newline.
  * Requires:
@@ -433,8 +431,7 @@ _NUMBER:
 
 .global _DIV10
 _DIV10:
-    PUSH   {LR}
-    PUSH   {R2-R3}
+    PUSH   {R2-R3,LR}
     LSR     R1,R0,#1
     LSR     R2,R0,#2
     ADD     R1,R1,R2            // q=(n>>1)+(n>>2)   q=(3/4)*n
@@ -463,8 +460,7 @@ _DIV10:
     ADD     R0,R1,R3            // R0 = n/10.
     MOV     R1,R2               // R1 = n%10.
 
-    POP    {R2-R3}
-    POP    {PC}
+    POP    {R2-R3,PC}
 
 /* Exits from a Forth word
  *
@@ -500,8 +496,7 @@ _DIV10:
 
 .global _KEY
 _KEY:
-    PUSH   {LR}
-    PUSH   {R1}
+    PUSH   {R1,LR}
     BL      getc      // Read character
 
     MOVS    R1,#0x20
@@ -513,8 +508,7 @@ _KEY:
 
     BL      putc      // Echo character
 1:
-    POP    {R1}
-    POP    {PC}
+    POP    {R1,PC}
 
 /*  Prints a character to stdout.
  *  Requires:
@@ -545,7 +539,7 @@ _EMIT:
 
 .global _WORD
 _WORD:
-    PUSH {LR}
+    PUSH   {LR}
     LDR     R4,=word_buffer
     MOV     R5,#0
     STR     R5,[R4]
@@ -601,8 +595,7 @@ word_buffer:    .space  32
  * R1 - Max length of buffer.
  */
 gets:
-        PUSH {LR}
-        PUSH {R0-R4}
+        PUSH {R0-R4,LR}
 
         MOVS  R2,#0       // Init loop counter
         MOVS  R3, R0      // R3 points to start of string buffer
@@ -630,8 +623,7 @@ gets:
         BL    putc        // Advance to next line
         MOVS  R0,#0x0A
         BL    putc        // Advance to next line
-        POP  {R0-R4}
-        POP  {PC}
+        POP  {R0-R4,PC}
 
 .global puts
 puts:
@@ -639,8 +631,7 @@ puts:
  * R0 - Pointer to string
  * R1 - Max length of buffer.
  */
-        PUSH {LR}
-        PUSH {R0-R2}
+        PUSH {R0-R2,LR}
 
         ADDS  R1, R1, R0  // R1 Points to end of buffer
         MOVS  R2, R0      // R2 Points to start of string
@@ -653,5 +644,4 @@ puts:
         CMP   R1, R2      // If at end of buffer, exit
         BHS   1b
 2:      // End of puts loop
-        POP  {R0-R2}
-        POP  {PC}
+        POP  {R0-R2,PC}

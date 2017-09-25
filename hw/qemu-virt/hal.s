@@ -14,16 +14,14 @@ putc:
  *    R0 contains the character to send over the UART.
  *  Modifies: None
  */
-        PUSH {LR}
-        PUSH {R1-R3}              @ Preserve used registers in stack.
+        PUSH {R1-R3,LR}                 @ Preserve used registers in stack.
         LDR   R1, =UART_ADDR            @ Load R1 with UART_ADDR.
         MOV   R3, #UART_TXFF_MASK
 1:      LDR   R2, [R1,#UART_FR_OFFSET]  @ Check [R1:UART_FR_OFFSET] & UART_TXFF_MASK == 0.
         TST   R2, R3
         BNE   1b                        @ Loop till UART0 is ready to TX.
         STR   R0, [R1,#UART_DR_OFFSET]  @ Store value R0 in [R1:UART_DR_OFFSET].
-        POP  {R1-R3}              @ Return used registers from stack.
-        POP  {PC}                       @ Return to main.
+        POP  {R1-R3,PC}                 @ Return used registers from stack.
 
 .global getc
 getc:
@@ -32,13 +30,11 @@ getc:
  *  Modifies:
  *    R0 will contain the value in the UART buffer.
  */
-        PUSH {LR}
-        PUSH {R1-R3}              @ Preserve used registers in stack.
+        PUSH {R1-R3,LR}                 @ Preserve used registers in stack.
         LDR   R1, =UART_ADDR            @ Load R1 with UART_ADDR.
         MOV   R3, #UART_RXFE_MASK
 1:      LDR   R2, [R1,#UART_FR_OFFSET]  @ Check [R1:UART_FR_OFFSET] & UART_TXFF_MASK == 0.
         TST   R2, R3
         BNE   1b                        @ Loop till UART0 is ready to TX.
         LDR   R0, [R1,#UART_DR_OFFSET]  @ Store value R0 in [R1:UART_DR_OFFSET].
-        POP  {R1-R3}                    @ Return used registers from stack.
-        POP  {PC}                       @ Return to main.
+        POP  {R1-R3,PC}                 @ Return used registers from stack.
