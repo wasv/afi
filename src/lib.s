@@ -114,7 +114,7 @@
     defcode "-",1,,SUB
     POP {R0}
     POP {R1}
-    SUB R1,R0,R1
+    SUB R1,R1,R0
     PUSH {R1}
     NEXT
 
