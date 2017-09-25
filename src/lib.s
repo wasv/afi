@@ -264,7 +264,7 @@ _FIND:
  * Requires:
  *  (1) R0 - Number to print.
  */
-    defcode ">H",2,F_HIDDEN,TH
+    defcode ">H",2,,TH
     POP     {R0}
     BL      _TH
     BL      puts
@@ -303,7 +303,7 @@ hextbl:
  * Requires:
  *  (1) R0 - Number to print.
  */
-    defcode ">D",2,F_HIDDEN,TD
+    defcode ">D",2,,TD
     POP     {R0}
     BL      _TD
     BL      puts
