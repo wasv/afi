@@ -1,18 +1,17 @@
 @ -*- mode:asm -*-
 .macro NEXT
-	LDR R0,[R7],#4
-    LDR R1,[R0]
-	BX  R1
+    LDR R0,[R7],#4
+    LDR PC,[R0]
 .endm
 
 .macro PUSHRSP reg
-	SUB R6,R6,#4
-	STR \reg,[R6]
+    SUB R6,R6,#4
+    STR \reg,[R6]
 .endm
 
 .macro POPRSP reg
-	LDR \reg,[R6]
-	ADD R6,R6,#4
+    LDR \reg,[R6]
+    ADD R6,R6,#4
 .endm
 
 .set F_IMMED,0x80
