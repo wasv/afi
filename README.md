@@ -1,5 +1,5 @@
-# af
-A Forth interpreter for ARM.
+# afi
+A Forth Interpreter for ARM.
 
 Based on the [jonesforth](http://git.annexia.org/?p=jonesforth.git;a=summary) interpreter, with some tweaks, and ported to ARM.
 
