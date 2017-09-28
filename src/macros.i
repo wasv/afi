@@ -28,7 +28,7 @@
     .section .rodata
     .align 4
     .globl name_\label
-name_\label :
+name_\label:
     .int link               // link
     .set link,name_\label
     .byte \flags+\namelen   // flags + length byte
@@ -44,7 +44,7 @@ name_\label :
     .section .rodata
     .align 4
     .globl name_\label
-name_\label :
+name_\label:
     .int link               // link
     .set link,name_\label
     .byte \flags+\namelen   // flags + length byte
@@ -66,6 +66,7 @@ code_\label :                   // assembler code follows
     NEXT
     .data
     .align 4
+    .global var_\name
 var_\name :
    .int \initial
 .endm

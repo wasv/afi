@@ -1,4 +1,5 @@
 .include            "src/macros.i"
+.include            "src/lib.s"
 @ --- equates
 .equ RETURN_STACK_SIZE, 1024
 

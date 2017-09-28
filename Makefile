@@ -1,29 +1,33 @@
+AS=arm-none-eabi-as
 TARGET=qemu-virt
 
-OBJS=src/main.o src/lib.o hw/$(TARGET)/startup.o hw/$(TARGET)/hal.o
+OBJS=hw/$(TARGET)/hal.o hw/$(TARGET)/lib.o
 
-.PHONY: all run debug clean-all
-all: out/$(TARGET)-main.elf
+.PHONY: all run debug clean clean-all $(TARGET)
 
-%.o: %.s src/macros.i
-	arm-none-eabi-as -g $< -o $@
-%.o: %.c
-	arm-none-eabi-gcc -c -g $< -c -o $@
+all: out/$(TARGET).elf
 
-out/$(TARGET)-main.elf: hw/$(TARGET)/$(TARGET).ld $(OBJS)
+$(TARGET): out/$(TARGET).elf out/$(TARGET).hex
+
+hw/$(TARGET)/lib.o: src/main.s src/lib.s src/latest.s
+
+out/$(TARGET).elf: hw/$(TARGET)/$(TARGET).ld $(OBJS)
 	@mkdir -p out/
 	arm-none-eabi-ld -T hw/$(TARGET)/$(TARGET).ld $(OBJS) -o $@
 
 %.bin: %.elf
 	arm-none-eabi-objcopy -O binary $< $@
+%.hex: %.elf
+	arm-none-eabi-objcopy -O ihex $< $@
 .PRECIOUS: %.elf
 
+clean:
+	find . -name *.o -delete -print
 clean-all:
 	rm -vrf out/
-	find . -name *.o -delete -print
 
-run: out/$(TARGET)-main.elf
+run: out/$(TARGET).elf
 	qemu-system-arm -M virt -kernel $< -nographic -s
 
-debug: out/$(TARGET)-main.elf
+debug: out/$(TARGET).elf
 	qemu-system-arm -M virt -kernel $< -nographic -s -S

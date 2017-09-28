@@ -1,7 +1,3 @@
-.include            "src/macros.i"
-
-    defvar "LATEST",6,,LATEST,name_WORD
-    .global var_S0
     defvar "S0",2,,SZ
 
     defconst "R0",2,,RZ,return_stack_top
@@ -479,12 +475,6 @@ _DIV10:
     PUSH    {R0}            // push the literal number on to stack
     NEXT
 
-/* Print a newline */
-    defword "CR",2,,CR
-    .int LIT,10,EMIT
-    .int LIT,13,EMIT
-    .int EXIT
-
 /*  Reads a character from stdin.
  *  Returns:
  *  (1) R0 - character read.
@@ -524,6 +514,12 @@ _EMIT:
     PUSH   {LR}
     BL      putc
     POP    {PC}
+
+/* Print a newline */
+    defword "CR",2,,CR
+    .int LIT,10,EMIT
+    .int LIT,13,EMIT
+    .int EXIT
 
 /*  Reads a word from stdin.
  *   Uses a static 32 byte buffer to store each word.
