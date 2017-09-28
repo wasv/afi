@@ -1,6 +1,6 @@
 TARGET=qemu-virt
 
-OBJS=src/main.o src/lib.o src/startup.o hw/$(TARGET)/hal.o
+OBJS=src/main.o src/lib.o hw/$(TARGET)/startup.o hw/$(TARGET)/hal.o
 
 .PHONY: all run debug clean-all
 all: out/$(TARGET)-main.elf
@@ -10,9 +10,9 @@ all: out/$(TARGET)-main.elf
 %.o: %.c
 	arm-none-eabi-gcc -c -g $< -c -o $@
 
-out/$(TARGET)-main.elf: ld/$(TARGET).ld $(OBJS)
+out/$(TARGET)-main.elf: hw/$(TARGET)/$(TARGET).ld $(OBJS)
 	@mkdir -p out/
-	arm-none-eabi-ld -T ld/$(TARGET).ld $(OBJS) -o $@
+	arm-none-eabi-ld -T hw/$(TARGET)/$(TARGET).ld $(OBJS) -o $@
 
 %.bin: %.elf
 	arm-none-eabi-objcopy -O binary $< $@
@@ -20,6 +20,7 @@ out/$(TARGET)-main.elf: ld/$(TARGET).ld $(OBJS)
 
 clean-all:
 	rm -vrf out/
+	find . -name *.o -delete -print
 
 run: out/$(TARGET)-main.elf
 	qemu-system-arm -M virt -kernel $< -nographic -s
