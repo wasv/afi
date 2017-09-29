@@ -1,11 +1,13 @@
 AS=arm-none-eabi-as
-TARGET=qemu-virt
+TARGET?=qemu-virt
 
 OBJS=hw/$(TARGET)/hal.o hw/$(TARGET)/lib.o
 
-.PHONY: all run debug clean clean-all $(TARGET)
-
 all: out/$(TARGET).elf
+
+include hw/$(TARGET)/Makefile
+
+.PHONY: all run debug clean clean-all $(TARGET)
 
 $(TARGET): out/$(TARGET).elf out/$(TARGET).hex
 
@@ -25,9 +27,3 @@ clean:
 	find . -name *.o -delete -print
 clean-all:
 	rm -vrf out/
-
-run: out/$(TARGET).elf
-	qemu-system-arm -M virt -kernel $< -nographic -s
-
-debug: out/$(TARGET).elf
-	qemu-system-arm -M virt -kernel $< -nographic -s -S
