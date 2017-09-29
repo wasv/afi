@@ -1,0 +1,3 @@
+[submodule "hw/teensy32"]
+	path = hw/teensy32
+	url = git@github.com:wastevensv/afi-teensy32.git
