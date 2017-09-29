@@ -1,7 +1,8 @@
 AS=arm-none-eabi-as
 TARGET?=qemu-virt
 
-OBJS=hw/$(TARGET)/hal.o hw/$(TARGET)/lib.o
+OBJS=hw/$(TARGET)/lib.o
+HAL=hw/$(TARGET)/hal.a
 
 all: out/$(TARGET).elf
 
@@ -13,9 +14,9 @@ $(TARGET): out/$(TARGET).elf out/$(TARGET).hex
 
 hw/$(TARGET)/lib.o: src/main.s src/lib.s src/latest.s
 
-out/$(TARGET).elf: hw/$(TARGET)/$(TARGET).ld $(OBJS)
+out/$(TARGET).elf: hw/$(TARGET)/$(TARGET).ld $(OBJS) $(HAL)
 	@mkdir -p out/
-	arm-none-eabi-ld -T hw/$(TARGET)/$(TARGET).ld $(OBJS) -o $@
+	arm-none-eabi-ld -T hw/$(TARGET)/$(TARGET).ld $(OBJS) $(HAL) -o $@
 
 %.bin: %.elf
 	arm-none-eabi-objcopy -O binary $< $@
@@ -25,5 +26,6 @@ out/$(TARGET).elf: hw/$(TARGET)/$(TARGET).ld $(OBJS)
 
 clean:
 	find . -name *.o -delete -print
+	find . -name *.d -delete -print
 clean-all:
 	rm -vrf out/
