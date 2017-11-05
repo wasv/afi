@@ -16,7 +16,7 @@ _Reset:
  *   Configures stack and jumps to main.
  */
 	LDR	SP, =stack_top
-	BL 	main
+	BL 	afi_main
 	B 	.
 
 .global putc

@@ -4,8 +4,8 @@
 .equ RETURN_STACK_SIZE, 1024
 
 .text
-.global main
-main:
+.global afi_main
+afi_main:
     LDR   R6, =return_stack_top //initialize return stack.
     LDR   R0, =var_S0
     STR   SP, [R0]

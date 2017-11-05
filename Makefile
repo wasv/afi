@@ -14,6 +14,11 @@ $(TARGET): out/$(TARGET).elf out/$(TARGET).hex
 
 hw/$(TARGET)/lib.o: src/main.s src/lib.s src/latest.s
 
+out/afi.a: src/main.s
+	@mkdir -p out/
+	$(AS) $(ASFLAGS) $^ -o obj/afi.o
+	arm-none-eabi-ar rcs $@ obj/afi.o
+
 out/$(TARGET).elf: hw/$(TARGET)/$(TARGET).ld $(OBJS) $(HAL)
 	@mkdir -p out/
 	arm-none-eabi-ld -T hw/$(TARGET)/$(TARGET).ld $(OBJS) $(HAL) -o $@
